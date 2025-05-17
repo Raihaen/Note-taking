@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Markdown Viewer</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    #file-list { margin-bottom: 2em; }
+    .folder { font-weight: bold; cursor: pointer; }
+    .file { cursor: pointer; }
+    pre { background: #f3f3f3; padding: 1em; }
+  </style>
+</head>
+<body>
+  <div id="breadcrumb"></div>
+  <div id="file-list"></div>
+  <pre id="file-content"></pre>
+  <script>
+    let currentPath = "";
+
+    function fetchFiles(path = "") {
+      fetch(`/files?path=${encodeURIComponent(path)}`)
+        .then(res => res.json())
+        .then(data => {
+          currentPath = data.path;
+          renderBreadcrumb(currentPath);
+          renderFileList(data.contents);
+          document.getElementById("file-content").textContent = "";
+        });
+    }
+
+    function renderBreadcrumb(path) {
+      const container = document.getElementById("breadcrumb");
+      const parts = path.split('/').filter(Boolean);
+      let html = `<a href="#" onclick="fetchFiles('')">Home</a>`;
+      let subPath = "";
+      parts.forEach((part, idx) => {
+        subPath += (subPath ? "/" : "") + part;
+        html += ` / <a href="#" onclick="fetchFiles('${subPath}')">${part}</a>`;
+      });
+      container.innerHTML = html;
+    }
+
+    function renderFileList(contents) {
+      const container = document.getElementById("file-list");
+      container.innerHTML = "";
+      contents.forEach(item => {
+        const el = document.createElement("div");
+        el.textContent = item.name;
+        el.className = item.type;
+        if (item.type === "folder") {
+          el.onclick = () => fetchFiles(currentPath ? currentPath + "/" + item.name : item.name);
+        } else {
+          el.onclick = () => fetchFile(currentPath ? currentPath + "/" + item.name : item.name);
+        }
+        container.appendChild(el);
+      });
+    }
+
+    function fetchFile(path) {
+      fetch(`/file?path=${encodeURIComponent(path)}`)
+        .then(res => res.text())
+        .then(text => {
+          document.getElementById("file-content").textContent = text;
+        });
+    }
+
+    // Initial load
+    fetchFiles();
+  </script>
+</body>
+</html>
