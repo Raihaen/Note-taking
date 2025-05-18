@@ -5,4 +5,4 @@ You can view ```.md``` files (text & math for now) and edit them, that is all!
 This app only shows files inside the docs folder.
 You can add a custom command to your linux or wsl system for quick access (this is what i did at least).
 
-Update 1 : Added buttons to add/rename files/folders.
+Update 1 : Added buttons to add/rename files/folders (local hosting).
