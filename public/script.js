@@ -93,5 +93,76 @@ document.getElementById("cancel-btn").onclick = function() {
   document.getElementById("editor").style.display = "none";
 };
 
+function createFile(filePath, content = "") {
+  fetch(`/file?path=${encodeURIComponent(filePath)}`, {
+    method: 'POST',
+    headers: { "Content-Type": "text/plain" },
+    body: content
+  })
+  .then(res => {
+    if (res.ok) {
+      fetchFiles(currentPath);
+    } else if (res.status === 409) {
+      alert("File already exists!");
+    } else {
+      alert("Failed to create file!");
+    }
+  });
+}
+
+function createFolder(folderPath) {
+  fetch(`/folder?path=${encodeURIComponent(folderPath)}`, {
+    method: 'POST'
+  })
+  .then(res => {
+    if (res.ok) {
+      fetchFiles(currentPath);
+    } else if (res.status === 409) {
+      alert("Folder already exists!");
+    } else {
+      alert("Failed to create folder!");
+    }
+  });
+}
+
+function renameItem(oldPath, newPath) {
+  fetch(`/rename?old=${encodeURIComponent(oldPath)}&new=${encodeURIComponent(newPath)}`, {
+    method: 'PATCH'
+  })
+  .then(res => {
+    if (res.ok) {
+      fetchFiles(currentPath);
+    } else {
+      alert("Failed to rename!");
+    }
+  });
+}
+
+function promptNewFile() {
+  const filename = prompt("Enter new file name (e.g., notes.md):");
+  if (filename) {
+    const filePath = currentPath ? `${currentPath}/${filename}` : filename;
+    createFile(filePath);
+  }
+}
+
+function promptNewFolder() {
+  const foldername = prompt("Enter new folder name:");
+  if (foldername) {
+    const folderPath = currentPath ? `${currentPath}/${foldername}` : foldername;
+    createFolder(folderPath);
+  }
+}
+
+function promptRename() {
+  const oldName = prompt("Enter the current name (relative to current folder):");
+  if (!oldName) return;
+  const newName = prompt("Enter the new name:");
+  if (!newName) return;
+  const oldPath = currentPath ? `${currentPath}/${oldName}` : oldName;
+  const newPath = currentPath ? `${currentPath}/${newName}` : newName;
+  renameItem(oldPath, newPath);
+}
+
 // Initial load
 fetchFiles();

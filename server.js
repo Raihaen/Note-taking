@@ -76,3 +76,47 @@ app.put("/file", (req, res) => {
     res.send("File saved");
   });
 });
+
+app.post("/file", (req, res) => {
+  const relPath = req.query.path;
+  if (!relPath) return res.status(400).send("Missing file path");
+  const absPath = path.join(DOCS_DIR, relPath);
+  if (!absPath.startsWith(DOCS_DIR)) return res.status(403).send("Forbidden");
+
+  // Optional: Check if file exists to avoid overwrite
+  if (fs.existsSync(absPath)) return res.status(409).send("File already exists");
+
+  fs.writeFile(absPath, req.body || "", "utf8", err => {
+    if (err) return res.status(500).send("Failed to create file");
+    res.send("File created");
+  });
+});
+
+app.post("/folder", (req, res) => {
+  const relPath = req.query.path;
+  if (!relPath) return res.status(400).send("Missing folder path");
+  const absPath = path.join(DOCS_DIR, relPath);
+  if (!absPath.startsWith(DOCS_DIR)) return res.status(403).send("Forbidden");
+
+  // Optional: Check if folder exists
+  if (fs.existsSync(absPath)) return res.status(409).send("Folder already exists");
+
+  fs.mkdir(absPath, err => {
+    if (err) return res.status(500).send("Failed to create folder");
+    res.send("Folder created");
+  });
+});
+
+app.patch("/rename", (req, res) => {
+  const oldPath = req.query.old;
+  const newPath = req.query.new;
+  if (!oldPath || !newPath) return res.status(400).send("Missing paths");
+  const absOld = path.join(DOCS_DIR, oldPath);
+  const absNew = path.join(DOCS_DIR, newPath);
+  if (!absOld.startsWith(DOCS_DIR) || !absNew.startsWith(DOCS_DIR)) return res.status(403).send("Forbidden");
+
+  fs.rename(absOld, absNew, err => {
+    if (err) return res.status(500).send("Failed to rename");
+    res.send("Renamed");
+  });
+});
